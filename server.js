@@ -1,15 +1,40 @@
 const express = require("express");
+
+const bodyParser = require("body-parser");
 const app = express();
 
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*"); // update to match the domain you will make the request from
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
+const sendWeekNumberRouter = require("./routes/sendWeekNumber");
+const totalPayRouter = require("./routes/totalPay");
+const driverTripsRouter = require("./routes/getDriverTrips");
+const sendEmailRouter = require("./routes/sendEmail");
+
+
+app.use(bodyParser.json());
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+  })
+);
+
+app.use(express.static("./public"));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  console.error(err.message, err.stack);
+  res.status(statusCode).json({ message: err.message });
+
+  return;
 });
 
-app.get("/sendWeekNumber", (req, res, next) => {
- res.json({success: "1", week: "29-W-21", validation: "FHT"});
-});
+app.use("/sendWeekNumber", sendWeekNumberRouter);
+
+app.use("/totalPay", totalPayRouter);
+
+app.use("/getDriverTrips", driverTripsRouter);
+
+app.use("/sendEmail", sendEmailRouter);
 
 app.listen(3001, () => {
  console.log("Server running on port 3001");
